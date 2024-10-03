@@ -4,11 +4,8 @@
 
 ## 🚀 Get Started
 
-Video:
-<video width="640" height="480" controls>
-  <source src="installation.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+Video Demonstration:
+[Download and watch the video](./video.mp4)
 
 To use the app locally, follow the steps below:
 
