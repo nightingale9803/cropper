@@ -4,6 +4,12 @@
 
 ## 🚀 Get Started
 
+Video:
+<video width="640" height="480" controls>
+  <source src="installation.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
 To use the app locally, follow the steps below:
 
 1. Download the code from this repository (using Zip download above or `git clone`) and extract the files onto a folder on your local machine.
