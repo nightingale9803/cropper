@@ -30,8 +30,8 @@ python pdfcropper.py --src_pdf="../test/test.pdf" --dst_path="../output" --mode=
 
 ## 📝 Parameters
 
-- `--src-pdf` : Path to the input PDF file, could be relative like `../data/input.pdf` or absolute like `C:/Users/username/Documents/input.pdf`
-- `--dst_path`: Path to the output directory where the cropped images will be saved, could be relative like `../data/output` or absolute like `C:/Users/username/Documents/output`
+- `--src-pdf` : Path to the input PDF file, could be a relative path like `../data/input.pdf` (relative to current directory) or an absolute path like `C:/Users/username/Documents/input.pdf`
+- `--dst_path`: Path to the output directory where the cropped images will be saved, could be a relative path like `../data/output` or an absolute path like `C:/Users/username/Documents/output`
 - `--start_page`: Page number to start cropping from. Default is 1.
 - `--end_page`: Page number to end cropping at. Default is -1, which means crop till the last page.
 - `--mode`: Mode of cropping, could be `rect` or `poly`. `rect` mode will use the bounding rectangle of the contours (x, y, width, height), `poly` will use the polygon outline of the contours ((x0, y0), (x1, y1), ...). Polygon will result in much higher precision cropping, on account of it wraps around the object tightly using polygon approximation, however, it has problems with open contours. Rectangles are safer in most cases, however, if the one of the primary objects is extending into the margin of the other one (overlapped boxes), it will cancel each other out, which could happen a lot in modern publications. In most cases, "poly" mode is recommended, unless the objects-to-be-cropped have unclosed shapes.
