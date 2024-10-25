@@ -1,5 +1,6 @@
 from math import *
 from PIL import Image
+import numpy as np
 import os, sys
 import pdfplumber
 
@@ -12,9 +13,10 @@ from modules.cropper import RubbingCropper
 
 
 def parse_pdf(
-    pdf_path,
+    src_path,
     save_path,
     mode="poly",
+    padding="white",
     start_page=1,
     end_page=-1,
     dpi=600,
@@ -25,59 +27,126 @@ def parse_pdf(
     description:
       main wrapper function for parsing a pdf
     args:
-      pdf_path: str, path to pdf file
+      src_path: str, path to pdf file or folder containing images to be parsed.
       save_path: str, path to the output folder, the folder will be created if not exist.
       exclude_range: list, list of page numbers to exclude from parsing.
       dpi: int, resolution of the image to be saved.
     """
-    with pdfplumber.open(pdf_path) as pdf:
-        print(f"Processing begins for {len(pdf.pages)} pages...")
-        for i, page in enumerate(tqdm(pdf.pages)):
-            if i < start_page - 1:
-                print(f"page {start_page} excluded, continue...")
-                continue
-            if end_page != -1 and i >= end_page:
-                print(f"specified end page {end_page} reached, stop processing...")
-                break
-            page_num = page.page_number
-            img = page.to_image(
-                resolution=dpi, antialias=True
-            )  # abbyy finereader image conversion use a 600dpi, consider chaning this if needed
-            page.close()  # release memory
+    if os.path.isfile(src_path) and src_path.endswith(".pdf"):
+        with pdfplumber.open(src_path) as pdf:
+            print(f"Processing begins for {len(pdf.pages)} pages...")
+            for i, page in enumerate(tqdm(pdf.pages)):
+                if i < start_page - 1:
+                    print(f"page {start_page} excluded, continue...")
+                    continue
+                if end_page != -1 and i >= end_page:
+                    print(f"specified end page {end_page} reached, stop processing...")
+                    break
+                page_num = page.page_number
+                img = page.to_image(
+                    resolution=dpi, antialias=True
+                )  # abbyy finereader image conversion use a 600dpi, consider chaning this if needed
+                page.close()  # release memory
+                # get all the bone tracings and page with bone tracings replaced by white background, see other file for details of the class
+                output = RubbingCropper(
+                    img.original, text_threshold, mode=mode, padding=padding
+                ).output
+                for j, bone in enumerate(output["images"]):
+                    box = output["boxes"][j]
+                    save_name = f"{page_num}-{[box[0], box[1], box[2], box[3]]}.png"
+                    if not os.path.exists(save_path):
+                        os.makedirs(save_path)
+                    if not os.path.exists(os.path.join(save_path, "images")):
+                        os.makedirs(os.path.join(save_path, "images"))
+                    if not only_object and not os.path.exists(
+                        os.path.join(save_path, "pages")
+                    ):
+                        os.makedirs(os.path.join(save_path, "pages"))
+                    # save the bone tracings
+                    Image.fromarray(bone).save(
+                        os.path.join(save_path, "images", save_name), dpi=(dpi, dpi)
+                    )
+                    # save the page with bone tracings replaced by white background
+                    if not only_object:
+                        Image.fromarray(output["page"]).save(
+                            os.path.join(save_path, "pages", f"{page_num}.png"),
+                            dpi=(dpi, dpi),
+                        )
+            print(f"Processing finished!")
+    else:
+        # if is file and ends with image extension
+        if os.path.isfile(src_path) and (
+            src_path.endswith(".png")
+            or src_path.endswith(".jpg")
+            or src_path.endswith(".jpeg")
+            or src_path.endswith(".tif")
+            or src_path.endswith(".tiff")
+            or src_path.endswith(".bmp")
+            or src_path.endswith(".webp")
+        ):
+            images = [src_path]
+        elif os.path.isdir(src_path):
+            # get all the images in the folder
+            images = [
+                os.path.join(src_path, f)
+                for f in os.listdir(src_path)
+                if f.endswith(".png")
+                or f.endswith(".jpg")
+                or f.endswith(".jpeg")
+                or f.endswith(".tif")
+                or f.endswith(".tiff")
+                or f.endswith(".bmp")
+                or f.endswith(".webp")
+            ]
+        else:
+            print(
+                "Invalid input path, the path should be a pdf or an image or a folder containing images."
+            )
+            return
+        print(f"Found {len(images)} image(s), processing begins...")
+        for i, img_path in enumerate(tqdm(images)):
             # get all the bone tracings and page with bone tracings replaced by white background, see other file for details of the class
-            output = RubbingCropper(img.original, text_threshold, mode=mode).output
-            for j, bone in enumerate(output["bones"]):
+            output = RubbingCropper(
+                img_path, text_threshold, mode=mode, padding=padding
+            ).output
+            for j, bone in enumerate(output["images"]):
                 box = output["boxes"][j]
-                save_name = f"{page_num}-{[box[0], box[1], box[2], box[3]]}.png"
+                save_name = f"{os.path.basename(img_path).split('.')[0]}-{[box[0], box[1], box[2], box[3]]}.png"
                 if not os.path.exists(save_path):
                     os.makedirs(save_path)
-                if not os.path.exists(os.path.join(save_path, "bones")):
-                    os.makedirs(os.path.join(save_path, "bones"))
+                if not os.path.exists(os.path.join(save_path, "images")):
+                    os.makedirs(os.path.join(save_path, "images"))
                 if not only_object and not os.path.exists(
                     os.path.join(save_path, "pages")
                 ):
                     os.makedirs(os.path.join(save_path, "pages"))
                 # save the bone tracings
                 Image.fromarray(bone).save(
-                    os.path.join(save_path, "bones", save_name), dpi=(dpi, dpi)
+                    os.path.join(save_path, "images", save_name), dpi=(dpi, dpi)
                 )
                 # save the page with bone tracings replaced by white background
                 if not only_object:
                     Image.fromarray(output["page"]).save(
-                        os.path.join(save_path, "pages", f"{page_num}.png"),
+                        os.path.join(
+                            save_path,
+                            "pages",
+                            f"{os.path.basename(img_path).split('.')[0]}.png",
+                        ),
                         dpi=(dpi, dpi),
                     )
-        print(f"Processing finished!")
 
 
 if __name__ == "__main__":
     # Usage example: python pdfcropper.py --src_pdf="../test/test.pdf" --dst_path="../output" --mode="poly" --dpi=600 --start_page=1 --text_threshold="200, 100" --only_object=True
     parser = argparse.ArgumentParser(
-        description="Parse a pdf file and crop out the bone tracings"
+        description="Parse a pdf file and crop out the primary object as images"
     )
 
     parser.add_argument(
-        "--src_pdf", type=str, required=True, help="path to the pdf file to be parsed"
+        "--src_path",
+        type=str,
+        required=True,
+        help="path to the pdf file to be parsed, or path to a folder containing images to be parsed",
     )
     parser.add_argument(
         "--dst_path",
@@ -91,7 +160,14 @@ if __name__ == "__main__":
         default="poly",
         required=False,
         help="the mode for cropping the bone tracings, rect will use the bounding rectangle of the contours, poly will use the polygon outline of the contours. Polygon will result in much higher precision cropping, however, it has problems with open contours. Rects is safer in most cases, however, if the one of the tracings is extending into the margin of the other one (overlapped boxes), it will cancel each other out.",
-    ),
+    )
+    parser.add_argument(
+        "--padding",
+        type=str,
+        default="white",
+        required=False,
+        help="can be either white, black or transparent, the padding color for the cropped images, default is white",
+    )
     parser.add_argument(
         "--dpi",
         type=int,
@@ -133,9 +209,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
     text_threshold = tuple([int(i.strip()) for i in args.text_threshold.split(",")])
     parse_pdf(
-        args.src_pdf,
+        args.src_path,
         args.dst_path,
         args.mode,
+        args.padding,
         args.start_page,
         args.end_page,
         args.dpi,
