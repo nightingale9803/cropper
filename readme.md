@@ -10,11 +10,11 @@ Video Demonstration:
 To use the app locally, follow the steps below:
 
 1. Download and extract the code via one of two options:
-   - Download the code from this repository (using .zip download above or `git clone`) and extract the files onto a folder on your local machine.
+   - Download the code from this repository (using .zip download above) and extract the files onto a folder on your local machine.
    - Install via `git clone` method (recommended for easy updating):
      - Install [git](https://git-scm.com/downloads) here
      - Open terminal in the directory where you want to install the code (anywhere on your machine)
-     - Run the following command in the terminal to clone the repository: `git clone https://github.com/nightingale9803/cropper`
+     - Run the following command in the terminal to clone the repository: `git clone https://github.com/nightingale9803/cropper.git`
 2. Install latest [python](https://www.python.org/downloads/) (recommended to follow the default instructions, be sure to check the option to `add python to PATH` during installation)
 3. Install latest [pip](https://pip.pypa.io/en/stable/installation/) package manager (should be installed by default with python), if not, manual installation can be done by following actions:
    - Open a terminal from anywhere
@@ -34,12 +34,12 @@ pip install -r requirements.txt
 
 - Navigate to the `scripts/` directory
 - Open terminal in the `scripts` directory
-- Run the following command in the terminal to crop from any PDF files (parameters can be adjusted as needed)
+- Run the following command in the terminal to crop from any PDF file, image, or a folder of images. A minimum example is:
 
 ```bash
 python pdfcropper.py --src_path="../test/test.pdf" --dst_path="../output"
 ```
-as a minimum example, or you can specify more complete parameters like below:
+or you can specify more complete parameters like below (parameters can be adjusted as needed):
 
 ```bash
 python pdfcropper.py --src_path="../test/test.pdf" --dst_path="../output" --mode="poly" --padding="white" --dpi=600 --start_page=1 --end_page=-1 --text_threshold="200, 100" --only_object=True
@@ -47,7 +47,7 @@ python pdfcropper.py --src_path="../test/test.pdf" --dst_path="../output" --mode
 
 ## 📝 Parameters
 
-- `--src-path` : Path to a input PDF file, an image, or a folder containing images. The path can be a relative path like `../data/input.pdf` (relative to current directory) or an absolute path like `C:/Users/username/Documents/input.pdf`
+- `--src-path` : Path to a input PDF file, an image, or a folder containing images. The path can be a relative path like `../data/input.pdf` (relative to current directory) or an absolute path like `C:/Users/username/Documents/input.pdf`, `C:/Users/username/Documents/images`
 - `--dst_path`: Path to the output directory where the cropped images will be saved, could be a relative path like `../data/output` or an absolute path like `C:/Users/username/Documents/output`
 - `--start_page`: Page number to start cropping from (optional). Default is 1, which is to crop from first page. Omitted when input is image or folder.
 - `--end_page`: Page number to end cropping at (optional). Default is -1, which means crop till the last page. Omitted when input is image or folder.
@@ -65,6 +65,10 @@ To update the code to the latest release, follow one of the two options below:
    - Install [git](https://git-scm.com/downloads) here (if not already installed)
    - Open terminal in the project directory (where the code is located)
    - Run the command `git pull` to update the code to the latest version
+
+## 🛠️ Debugging
+
+One of the common issues when running the script is `python not recognized as an internal or external command`. Or `pip not recognized as an internal or external command`. This is usually due to the `PATH` variable not being set correctly (usually managed via default python installation). But if such issues occur, you can refer to tutorial like [this](https://realpython.com/add-python-to-path/) to add python to the `PATH` variable.
 
 ## 🌲 Project Structure
 
